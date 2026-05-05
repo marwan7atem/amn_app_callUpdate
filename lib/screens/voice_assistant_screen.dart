@@ -3,21 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:url_launcher/url_launcher.dart';
 
 import '../services/usage_logger.dart';
-import 'car_control_screen.dart';
+import '../services/voice_command_sync_service.dart';
 import 'car_status_screen.dart';
-import 'driver_status_screen.dart';
+import 'edit_profile_screen.dart';
 import 'emergency_contacts_screen.dart';
-import 'emergency_history_screen.dart';
-import 'emergency_numbers_screen.dart';
-import 'emergency_services_screen.dart';
-import 'first_aid_screen.dart';
 import 'hospital_insurance_screen.dart';
-import 'parking_map_screen.dart';
 import 'pairing_unpaired_screen.dart';
-import 'sos_emergency_screen.dart';
+import 'parking_map_screen.dart';
 
 class VoiceAssistantScreen extends StatefulWidget {
   const VoiceAssistantScreen({super.key});
@@ -29,14 +23,19 @@ class VoiceAssistantScreen extends StatefulWidget {
 class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
   late final stt.SpeechToText _speech;
   late final FlutterTts _tts;
+  final _sync = VoiceCommandSyncService.instance;
 
   bool _available = false;
   bool _initializing = true;
   bool _listening = false;
   bool _thinking = false;
   bool _handlingFinalResult = false;
+  bool _bridgeConnected = false;
   String _recognizedText = '';
   String _assistantReply = 'Tap the microphone and tell AMN what you need.';
+  String _bridgeStatus = 'Checking car voice bridge...';
+  String _baseUrl = '';
+  List<Map<String, dynamic>> _catalog = const [];
   Timer? _commandDebounce;
 
   @override
@@ -51,6 +50,9 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
   Future<void> _initAssistant() async {
     await _initTts();
     await _initSpeech();
+    _catalog = await _sync.loadCatalog();
+    _baseUrl = await _sync.getBaseUrl();
+    await _refreshBridgeStatus();
     if (!mounted) return;
     setState(() {
       _initializing = false;
@@ -80,7 +82,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
       setState(() {
         _available = available;
         _assistantReply = available
-            ? 'I am ready. Try saying "open parking map" or "call emergency".'
+            ? 'I am ready. Say a command and I will route it correctly.'
             : 'Microphone or speech recognition is not available on this device.';
       });
     } catch (_) {
@@ -103,112 +105,42 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
     try {
       await _tts.stop();
       await _tts.speak(text);
-    } catch (_) {
-      // The visible reply is still useful if the device cannot speak.
-    }
+    } catch (_) {}
   }
 
   String _normalize(String text) {
     return text
         .toLowerCase()
-        .replaceAll(RegExp(r"[^a-z0-9\s]"), ' ')
-        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r"[^a-z0-9\\s]"), ' ')
+        .replaceAll(RegExp(r'\\s+'), ' ')
         .trim();
   }
 
-  bool _containsAny(String text, List<String> phrases) {
-    return phrases.any(text.contains);
+  String _patternFromPhrase(String phrase) {
+    final placeholder = RegExp(r'\\[(\\w+)\\]');
+    final normalized = _normalize(phrase.replaceAll(placeholder, '__slot__'));
+    return RegExp.escape(normalized)
+        .replaceAll('__slot__', '(.+)')
+        .replaceAll(r'\\ ', r'\\s+');
   }
 
-  bool _isEmergencyWord(String text) {
-    return _containsAny(text, [
-      'emergency',
-      'emergenc',
-      'emerg',
-      'sos',
-      'accident',
-      'crash',
-    ]);
+  Map<String, dynamic>? _findCatalogMatch(String recognized) {
+    final normalized = _normalize(recognized);
+    for (final item in _catalog) {
+      final phrases = (item['phrases'] as List?) ?? const [];
+      for (final phrase in phrases) {
+        final rawPhrase = phrase.toString();
+        final pattern = _patternFromPhrase(rawPhrase);
+        if (RegExp(pattern).hasMatch(normalized)) {
+          return item;
+        }
+      }
+    }
+    return null;
   }
 
-  bool _isEmergencyCallCommand(String text) {
-    return _isEmergencyWord(text) &&
-        _containsAny(text, ['call', 'dial', 'phone', 'start', 'help']);
-  }
-
-  bool _isActionableCommand(String recognized) {
-    final text = _normalize(recognized);
-    if (text.isEmpty) return false;
-
-    return _isEmergencyCallCommand(text) ||
-        _containsAny(text, [
-          'help',
-          'commands',
-          'what can you do',
-          'open emergency',
-          'emergency service',
-          'contact',
-          'hospital',
-          'doctor',
-          'clinic',
-          'insurance',
-          'first aid',
-          'cpr',
-          'emergency number',
-          'ambulance number',
-          'police number',
-          'history',
-          'car status',
-          'car health',
-          'engine',
-          'fuel',
-          'battery',
-          'tire',
-          'tyre',
-          'oil',
-          'driver status',
-          'driver behavior',
-          'fatigue',
-          'attention',
-          'safety score',
-          'parking',
-          'parking map',
-          'find parking',
-          'where is my car',
-          'pair',
-          'pairing',
-          'bluetooth',
-          'connect car',
-          'connect vehicle',
-          'control',
-          'car control',
-          'drive mode',
-          'charging',
-          'speed limit',
-          'hello',
-          'hi',
-          'hey',
-        ]);
-  }
-
-  Future<void> _callEmergencyNumber() async {
-    UsageLogger.logAction('voice_command_call_emergency');
-    const emergencyNumber = '122';
-    final uri = Uri(scheme: 'tel', path: emergencyNumber);
-    await launchUrl(uri);
-  }
-
-  Future<void> _navigateTo({
-    required String routeName,
-    required String reply,
-    required WidgetBuilder builder,
-  }) async {
-    UsageLogger.logAction('voice_command_$routeName');
-    if (!mounted) return;
-
-    Navigator.push(context, MaterialPageRoute(builder: builder));
-
-    await _setAssistantReply(reply, speak: true);
+  bool _isLikelyActionableCommand(String recognized) {
+    return _findCatalogMatch(recognized) != null;
   }
 
   Future<void> _setAssistantReply(String reply, {bool speak = false}) async {
@@ -222,231 +154,112 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
     }
   }
 
+  Future<void> _refreshBridgeStatus() async {
+    final payload = await _sync.getBridgeStatus();
+    if (!mounted) return;
+    setState(() {
+      _bridgeConnected =
+          payload['bridge_connected'] == true && payload['ok'] == true;
+      if (_bridgeConnected) {
+        final lastIntent =
+            ((payload['last_result'] as Map?)?['intent'] ?? 'idle').toString();
+        _bridgeStatus = 'Connected to car software | Last intent: $lastIntent';
+      } else {
+        _bridgeStatus =
+            payload['error']?.toString() ?? 'Car voice bridge is offline.';
+      }
+    });
+  }
+
+  Future<bool> _handleLocalAppAction(Map<String, dynamic> item) async {
+    final action = (item['app_action'] ?? '').toString();
+    final reply = (item['confirmation'] ?? 'Done.').toString();
+
+    Widget? screen;
+    switch (action) {
+      case 'open_profile':
+        screen = const EditProfileScreen();
+        break;
+      case 'open_emergency_contacts':
+        screen = const EmergencyContactsScreen();
+        break;
+      case 'open_hospital_insurance':
+        screen = const HospitalInsuranceScreen();
+        break;
+      case 'open_pairing':
+        screen = const PairingUnpairedScreen();
+        break;
+      case 'open_car_status':
+        screen = const CarStatusScreen();
+        break;
+      case 'open_parking_map':
+        screen = const ParkingMapScreen();
+        break;
+      default:
+        return false;
+    }
+
+    if (!mounted) return false;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen!));
+    await _setAssistantReply(reply, speak: true);
+    return true;
+  }
+
   Future<void> _handleCommand(String recognized) async {
-    final text = _normalize(recognized);
+    final text = recognized.trim();
     if (text.isEmpty) {
       await _setAssistantReply(
-        "I did not catch that. Please try again.",
+        'I did not catch that. Please try again.',
         speak: true,
       );
       return;
     }
 
-    if (_containsAny(text, ['help', 'what can you do', 'commands'])) {
+    final match = _findCatalogMatch(text);
+    if (match == null) {
       await _setAssistantReply(
-        'You can ask me to open emergency services, SOS, contacts, hospitals, first aid, emergency numbers, history, car status, driver status, parking map, pairing, or car controls.',
+        'That command is not in the AMN command list yet.',
         speak: true,
       );
       return;
     }
 
-    if (_isEmergencyCallCommand(text)) {
-      try {
-        await _callEmergencyNumber();
+    final targets = ((match['targets'] as List?) ?? const [])
+        .map((e) => e.toString())
+        .toList();
+
+    if (targets.contains('software')) {
+      await _refreshBridgeStatus();
+      if (!_bridgeConnected) {
         await _setAssistantReply(
-          'Calling emergency services now.',
+          'The car software is not reachable right now. Check the Pi voice bridge connection first.',
           speak: true,
         );
-      } catch (_) {
-        await _navigateTo(
-          routeName: 'sos',
-          reply:
-              'I could not open the phone dialer, so I opened the SOS screen instead.',
-          builder: (_) => const SosEmergencyScreen(),
-        );
+        return;
       }
-      return;
-    }
 
-    if (_containsAny(text, ['sos', 'open sos', 'start sos'])) {
-      await _navigateTo(
-        routeName: 'sos',
-        reply: 'Opening SOS.',
-        builder: (_) => const SosEmergencyScreen(),
+      final result = await _sync.sendCommand(text, source: 'app');
+      final reply = (result['reply'] ?? 'Command received.').toString();
+      await UsageLogger.logAction(
+        'voice_command_sent_to_car',
+        data: <String, dynamic>{
+          'command': text,
+          'intent': result['intent']?.toString() ?? '',
+          'ok': result['ok'] == true,
+        },
       );
+      await _setAssistantReply(reply, speak: true);
+      await _refreshBridgeStatus();
       return;
     }
 
-    if (_containsAny(text, [
-      'emergency service',
-      'emergency services',
-      'open emergency',
-      'accident',
-      'crash',
-    ])) {
-      await _navigateTo(
-        routeName: 'emergency_services',
-        reply: 'Opening emergency services.',
-        builder: (_) => const EmergencyServicesScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'contact',
-      'contacts',
-      'emergency contact',
-      'notify family',
-      'call family',
-    ])) {
-      await _navigateTo(
-        routeName: 'emergency_contacts',
-        reply: 'Opening your emergency contacts.',
-        builder: (_) => const EmergencyContactsScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'hospital',
-      'doctor',
-      'clinic',
-      'insurance',
-      'medical help',
-    ])) {
-      await _navigateTo(
-        routeName: 'hospital_insurance',
-        reply: 'Opening hospitals and insurance.',
-        builder: (_) => const HospitalInsuranceScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'first aid',
-      'cpr',
-      'bleeding',
-      'choking',
-      'medical tips',
-    ])) {
-      await _navigateTo(
-        routeName: 'first_aid',
-        reply: 'Opening first aid tips.',
-        builder: (_) => const FirstAidScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'emergency number',
-      'emergency numbers',
-      'ambulance number',
-      'police number',
-      'fire number',
-    ])) {
-      await _navigateTo(
-        routeName: 'emergency_numbers',
-        reply: 'Opening emergency numbers for Egypt.',
-        builder: (_) => const EmergencyNumbersScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'history',
-      'emergency history',
-      'previous emergency',
-      'old sos',
-    ])) {
-      await _navigateTo(
-        routeName: 'emergency_history',
-        reply: 'Opening emergency history.',
-        builder: (_) => const EmergencyHistoryScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'car status',
-      'car health',
-      'engine',
-      'fuel',
-      'battery',
-      'tire',
-      'tyre',
-      'oil',
-    ])) {
-      await _navigateTo(
-        routeName: 'car_status',
-        reply: 'Opening car status.',
-        builder: (_) => const CarStatusScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'driver status',
-      'driver behavior',
-      'fatigue',
-      'attention',
-      'safety score',
-    ])) {
-      await _navigateTo(
-        routeName: 'driver_status',
-        reply: 'Opening driver status.',
-        builder: (_) => const DriverStatusScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'parking',
-      'park',
-      'parking map',
-      'find parking',
-      'where is my car',
-    ])) {
-      await _navigateTo(
-        routeName: 'parking_map',
-        reply: 'Opening parking map.',
-        builder: (_) => const ParkingMapScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'pair',
-      'pairing',
-      'bluetooth',
-      'connect car',
-      'connect vehicle',
-    ])) {
-      await _navigateTo(
-        routeName: 'pairing',
-        reply: 'Opening vehicle pairing.',
-        builder: (_) => const PairingUnpairedScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, [
-      'control',
-      'controls',
-      'car control',
-      'drive mode',
-      'charging',
-      'speed limit',
-    ])) {
-      await _navigateTo(
-        routeName: 'car_controls',
-        reply: 'Opening car controls.',
-        builder: (_) => const CarControlScreen(),
-      );
-      return;
-    }
-
-    if (_containsAny(text, ['hello', 'hi', 'hey'])) {
+    final handled = await _handleLocalAppAction(match);
+    if (!handled) {
       await _setAssistantReply(
-        'Hello. I am listening. Ask me for emergency help, car status, parking, hospitals, or first aid.',
+        'This command is recognized, but its app action is not connected yet.',
         speak: true,
       );
-      return;
     }
-
-    await _setAssistantReply(
-      'I heard "$recognized", but I do not know that command yet. Say "help" to hear what I can do.',
-      speak: true,
-    );
   }
 
   Future<void> _maybeHandleFinalUtterance() async {
@@ -463,7 +276,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
     setState(() {
       _listening = false;
       _thinking = true;
-      _assistantReply = 'Understanding your request...';
+      _assistantReply = 'Processing your command...';
     });
 
     await _handleCommand(_recognizedText);
@@ -472,7 +285,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
 
   void _scheduleCommandHandling() {
     _commandDebounce?.cancel();
-    if (!_isActionableCommand(_recognizedText)) return;
+    if (!_isLikelyActionableCommand(_recognizedText)) return;
 
     _commandDebounce = Timer(const Duration(milliseconds: 900), () {
       if (!mounted || _handlingFinalResult) return;
@@ -544,6 +357,50 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
     }
   }
 
+  Future<void> _showBridgeConfigDialog() async {
+    final controller = TextEditingController(text: _baseUrl);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF151515),
+          title: const Text(
+            'Pi Voice Bridge URL',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'http://192.168.1.126:8876',
+              hintStyle: TextStyle(color: Colors.white54),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (saved == true) {
+      await _sync.setBaseUrl(controller.text);
+      _baseUrl = await _sync.getBaseUrl();
+      await _refreshBridgeStatus();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pi voice bridge URL updated.')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _commandDebounce?.cancel();
@@ -557,10 +414,17 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
     final statusText = _initializing
         ? 'Preparing voice assistant...'
         : _listening
-        ? 'Listening...'
-        : _available
-        ? 'Tap and say a command'
-        : 'Microphone unavailable';
+            ? 'Listening...'
+            : _available
+                ? 'Tap and speak a command'
+                : 'Microphone unavailable';
+
+    final commandChips = _catalog.take(5).map((item) {
+      final phrases = (item['phrases'] as List?) ?? const [];
+      final label =
+          phrases.isNotEmpty ? phrases.first.toString() : item['intent'].toString();
+      return _CommandChip(label: label);
+    }).toList();
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -575,6 +439,12 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
           'Voice Assistant',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            onPressed: _showBridgeConfigDialog,
+            icon: const Icon(Icons.settings_ethernet, color: Colors.white),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -582,7 +452,47 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _bridgeConnected
+                        ? Colors.green.withValues(alpha: 0.4)
+                        : Colors.red.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _bridgeConnected
+                          ? 'Car bridge connected'
+                          : 'Car bridge offline',
+                      style: TextStyle(
+                        color: _bridgeConnected
+                            ? Colors.greenAccent
+                            : Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _bridgeStatus,
+                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _baseUrl,
+                      style: const TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
               Text(
                 statusText,
                 style: TextStyle(
@@ -591,7 +501,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 34),
+              const SizedBox(height: 30),
               GestureDetector(
                 onTap: _toggleListening,
                 child: AnimatedContainer(
@@ -628,13 +538,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
                 alignment: WrapAlignment.center,
                 spacing: 8,
                 runSpacing: 8,
-                children: const [
-                  _CommandChip(label: 'Call emergency'),
-                  _CommandChip(label: 'Open parking map'),
-                  _CommandChip(label: 'Show car status'),
-                  _CommandChip(label: 'First aid tips'),
-                  _CommandChip(label: 'Help'),
-                ],
+                children: commandChips,
               ),
               const SizedBox(height: 26),
               Expanded(
@@ -648,9 +552,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
               const SizedBox(height: 14),
               _AssistantPanel(
                 title: 'AMN reply',
-                text: _thinking
-                    ? 'Understanding your request...'
-                    : _assistantReply,
+                text: _thinking ? 'Processing your command...' : _assistantReply,
                 fixedHeight: 138,
               ),
             ],

@@ -1,0 +1,344 @@
+{
+  "version": "1.1",
+  "notes": "Filtered voice command catalog for the AMN project. It keeps commands that are practical, relevant to the current product scope, and safe to wire into real actions.",
+  "commands": [
+    {
+      "category": "app_profile",
+      "intent": "open_profile",
+      "targets": ["app"],
+      "phrases": ["show my profile", "open my account", "edit my profile", "show my driver settings"],
+      "app_action": "open_profile",
+      "confirmation": "Opening your profile."
+    },
+    {
+      "category": "app_emergency",
+      "intent": "open_emergency_contacts",
+      "targets": ["app"],
+      "phrases": ["open emergency profile", "show emergency contacts", "add emergency contact", "remove emergency contact", "change my emergency contacts"],
+      "app_action": "open_emergency_contacts",
+      "confirmation": "Opening your emergency contacts."
+    },
+    {
+      "category": "app_emergency",
+      "intent": "open_hospital_insurance",
+      "targets": ["app"],
+      "phrases": ["show insurance info", "update insurance info", "show nearby hospitals"],
+      "app_action": "open_hospital_insurance",
+      "confirmation": "Opening hospitals and insurance."
+    },
+    {
+      "category": "app_connection",
+      "intent": "open_pairing",
+      "targets": ["app"],
+      "phrases": ["connect to my car", "reconnect to car", "show bluetooth status", "show phone status"],
+      "app_action": "open_pairing",
+      "confirmation": "Opening car pairing."
+    },
+    {
+      "category": "app_status",
+      "intent": "open_car_status",
+      "targets": ["app"],
+      "phrases": ["show car connection status", "show system status", "show car readiness", "is my car connected"],
+      "app_action": "open_car_status",
+      "confirmation": "Opening car status."
+    },
+    {
+      "category": "app_location",
+      "intent": "open_parking_map",
+      "targets": ["app"],
+      "phrases": ["show my car location", "show live location", "share car location", "open car route"],
+      "app_action": "open_parking_map",
+      "confirmation": "Opening live car location."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_dashboard",
+      "targets": ["software", "app"],
+      "phrases": ["open dashboard", "go home", "go to dashboard", "open home", "show dashboard"],
+      "software_action": "show_home",
+      "confirmation": "Opening dashboard."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_camera",
+      "targets": ["software", "app"],
+      "phrases": ["open camera", "show camera", "turn on camera"],
+      "software_action": "show_camera",
+      "confirmation": "Opening camera."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_music",
+      "targets": ["software", "app"],
+      "phrases": ["open music", "show music", "open player"],
+      "software_action": "show_music",
+      "confirmation": "Opening music."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_maps",
+      "targets": ["software", "app"],
+      "phrases": ["open maps", "show maps", "open navigation", "show navigation"],
+      "software_action": "show_maps",
+      "confirmation": "Opening maps."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_phone",
+      "targets": ["software", "app"],
+      "phrases": ["open phone", "open bluetooth", "show bluetooth page", "phone integration"],
+      "software_action": "show_phone",
+      "confirmation": "Opening phone integration."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_calls",
+      "targets": ["software", "app"],
+      "phrases": ["open calls", "show calls", "open call screen", "open dialer"],
+      "software_action": "show_calls",
+      "confirmation": "Opening calls."
+    },
+    {
+      "category": "software_navigation",
+      "intent": "open_emergency",
+      "targets": ["software", "app"],
+      "phrases": ["open emergency", "open sos", "show sos", "emergency screen"],
+      "software_action": "show_emergency",
+      "confirmation": "Opening emergency."
+    },
+    {
+      "category": "system",
+      "intent": "go_back",
+      "targets": ["software"],
+      "phrases": ["go back", "close this page"],
+      "software_action": "go_back",
+      "confirmation": "Going back."
+    },
+    {
+      "category": "system",
+      "intent": "lock_system",
+      "targets": ["software"],
+      "phrases": ["lock system", "log out", "switch user"],
+      "software_action": "lock_system",
+      "confirmation": "Locking the system."
+    },
+    {
+      "category": "engine",
+      "intent": "start_engine",
+      "targets": ["software"],
+      "phrases": ["start engine"],
+      "software_action": "start_engine",
+      "confirmation": "Starting engine."
+    },
+    {
+      "category": "engine",
+      "intent": "stop_engine",
+      "targets": ["software"],
+      "phrases": ["stop engine"],
+      "software_action": "stop_engine",
+      "confirmation": "Stopping engine."
+    },
+    {
+      "category": "face_id",
+      "intent": "who_am_i",
+      "targets": ["software"],
+      "phrases": ["who am i", "show driver profile"],
+      "software_action": "who_am_i",
+      "confirmation": "Showing driver profile."
+    },
+    {
+      "category": "face_id",
+      "intent": "driver_registration",
+      "targets": ["software"],
+      "phrases": ["add new driver", "start driver registration", "capture face sample", "save new driver", "remove driver", "show authorized drivers"],
+      "software_action": "driver_registration",
+      "confirmation": "Opening driver registration."
+    },
+    {
+      "category": "camera",
+      "intent": "camera_capture",
+      "targets": ["software"],
+      "phrases": ["take a photo", "capture image", "show last photo", "delete last photo"],
+      "software_action": "camera_capture",
+      "confirmation": "Handling camera command."
+    },
+    {
+      "category": "camera",
+      "intent": "camera_recording",
+      "targets": ["software"],
+      "phrases": ["start recording", "stop recording", "show last video", "open gallery"],
+      "software_action": "camera_recording",
+      "confirmation": "Handling recording command."
+    },
+    {
+      "category": "bluetooth",
+      "intent": "bluetooth_management",
+      "targets": ["software"],
+      "phrases": ["scan for phones", "pair this phone", "connect my phone", "reconnect my phone", "disconnect phone", "forget this phone", "trust this phone", "show connected phone", "show bluetooth status"],
+      "software_action": "bluetooth_management",
+      "confirmation": "Opening Bluetooth controls."
+    },
+    {
+      "category": "bluetooth",
+      "intent": "audio_route_management",
+      "targets": ["software"],
+      "phrases": ["set speaker output", "set microphone input", "prepare music route", "prepare hands free"],
+      "software_action": "audio_route_management",
+      "confirmation": "Preparing audio routing."
+    },
+    {
+      "category": "calls",
+      "intent": "call_contact",
+      "targets": ["software"],
+      "phrases": ["call mom", "call dad", "call [contact_name]", "redial last number"],
+      "software_action": "call_contact",
+      "confirmation": "Preparing the call."
+    },
+    {
+      "category": "calls",
+      "intent": "call_control",
+      "targets": ["software"],
+      "phrases": ["answer call", "reject call", "end call", "show call status"],
+      "software_action": "call_control",
+      "confirmation": "Handling call control."
+    },
+    {
+      "category": "calls",
+      "intent": "call_audio_control",
+      "targets": ["software"],
+      "phrases": ["mute microphone", "unmute microphone"],
+      "software_action": "call_audio_control",
+      "confirmation": "Updating call audio."
+    },
+    {
+      "category": "maps",
+      "intent": "search_place",
+      "targets": ["software"],
+      "phrases": ["search for [place]", "find nearest hospital", "find nearest gas station", "find nearest restaurant"],
+      "software_action": "search_place",
+      "confirmation": "Searching the map."
+    },
+    {
+      "category": "maps",
+      "intent": "navigate_place",
+      "targets": ["software"],
+      "phrases": ["navigate to [place]", "take me to [place]", "set destination to [place]"],
+      "software_action": "navigate_place",
+      "confirmation": "Preparing navigation."
+    },
+    {
+      "category": "maps",
+      "intent": "route_control",
+      "targets": ["software"],
+      "phrases": ["start route", "start navigation", "stop navigation", "cancel route", "use current location", "zoom in", "zoom out", "refresh map"],
+      "software_action": "route_control",
+      "confirmation": "Updating navigation."
+    },
+    {
+      "category": "emergency",
+      "intent": "activate_sos",
+      "targets": ["software"],
+      "phrases": ["activate sos", "help me now"],
+      "software_action": "activate_sos",
+      "confirmation": "Activating SOS."
+    },
+    {
+      "category": "emergency",
+      "intent": "emergency_calls",
+      "targets": ["software"],
+      "phrases": ["call ambulance", "call police", "call fire department", "call emergency contact"],
+      "software_action": "emergency_calls",
+      "confirmation": "Preparing emergency call."
+    },
+    {
+      "category": "emergency",
+      "intent": "emergency_sharing",
+      "targets": ["software"],
+      "phrases": ["send emergency alert", "send my location", "share live location", "show nearby hospitals", "open emergency profile", "update emergency profile"],
+      "software_action": "emergency_sharing",
+      "confirmation": "Handling emergency command."
+    },
+    {
+      "category": "safety",
+      "intent": "driver_monitoring",
+      "targets": ["software"],
+      "phrases": ["start driver monitoring", "stop driver monitoring", "show safety status", "what did you detect"],
+      "software_action": "driver_monitoring",
+      "confirmation": "Updating driver monitoring."
+    },
+    {
+      "category": "safety",
+      "intent": "safety_toggles",
+      "targets": ["software"],
+      "phrases": ["enable drowsiness detection", "disable drowsiness detection", "enable distraction detection", "disable distraction detection", "enable phone usage detection", "disable phone usage detection", "enable pedestrian detection", "disable pedestrian detection", "enable object detection", "disable object detection"],
+      "software_action": "safety_toggles",
+      "confirmation": "Updating safety detection settings."
+    },
+    {
+      "category": "maintenance",
+      "intent": "maintenance_overview",
+      "targets": ["software", "app"],
+      "phrases": ["open maintenance", "show maintenance reminders", "when is my next maintenance", "show overdue maintenance"],
+      "software_action": "maintenance_overview",
+      "app_action": "maintenance_overview",
+      "confirmation": "Opening maintenance."
+    },
+    {
+      "category": "maintenance",
+      "intent": "maintenance_update",
+      "targets": ["software", "app"],
+      "phrases": ["add maintenance reminder", "delete maintenance reminder", "mark maintenance as done", "add oil change reminder", "add tire check reminder", "add brake check reminder"],
+      "software_action": "maintenance_update",
+      "app_action": "maintenance_update",
+      "confirmation": "Updating maintenance reminders."
+    },
+    {
+      "category": "sync",
+      "intent": "sync_profile",
+      "targets": ["app"],
+      "phrases": ["sync my account", "sync with car", "upload my settings to the car", "download settings from the car", "upload favorites to car", "upload emergency profile to car"],
+      "app_action": "sync_profile",
+      "confirmation": "Syncing your account with the car."
+    },
+    {
+      "category": "emergency",
+      "intent": "mobile_emergency_message",
+      "targets": ["app"],
+      "phrases": ["send emergency message", "send emergency sms", "send emergency whatsapp", "call my emergency contact", "share my live location"],
+      "app_action": "mobile_emergency_message",
+      "confirmation": "Preparing emergency communication."
+    },
+    {
+      "category": "remote_info",
+      "intent": "remote_info",
+      "targets": ["app"],
+      "phrases": ["is the driver verified", "show current driver", "show active route", "show current music"],
+      "app_action": "remote_info",
+      "confirmation": "Opening live car information."
+    },
+    {
+      "category": "notifications",
+      "intent": "alerts_overview",
+      "targets": ["app"],
+      "phrases": ["show alerts", "show safety alerts", "show emergency alerts", "clear notifications"],
+      "app_action": "alerts_overview",
+      "confirmation": "Opening alerts."
+    },
+    {
+      "category": "system",
+      "intent": "voice_status",
+      "targets": ["software", "app"],
+      "phrases": ["voice status", "assistant status", "are you ready", "system status"],
+      "software_action": "voice_status",
+      "confirmation": "Voice command system is ready."
+    },
+    {
+      "category": "system",
+      "intent": "help",
+      "targets": ["software", "app"],
+      "phrases": ["help", "what can you do", "voice help", "show commands"],
+      "software_action": "voice_help",
+      "confirmation": "I can help with car pages, calls, maps, Bluetooth, emergency, and maintenance."
+    }
+  ]
+}
