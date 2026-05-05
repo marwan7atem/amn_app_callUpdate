@@ -3,6 +3,7 @@ import 'language_country_screen.dart';
 import 'edit_profile_screen.dart';
 import 'car_information_screen.dart';
 import 'driver_license_screen.dart';
+import 'android_call_bridge_status_screen.dart';
 import 'dashboard_screen.dart';
 import '../services/preferences_service.dart';
 import '../utils/locale_helper.dart';
@@ -179,6 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Notifications',
                 'Language',
                 'Clear App Cache',
+                'Android Call Bridge',
               ]),
               const SizedBox(height: 24),
               // Help & Support Section
@@ -340,6 +342,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const CarInformationScreen()),
+      );
+    } else if (label == 'Android Call Bridge') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const AndroidCallBridgeStatusScreen(),
+        ),
       );
     }
     // Other labels (Security, Privacy, etc.) can be wired later as needed.

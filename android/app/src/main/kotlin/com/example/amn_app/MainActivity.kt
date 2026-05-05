@@ -29,6 +29,29 @@ class MainActivity : FlutterActivity() {
                             ),
                         )
                     }
+                    "startNativeBridge" -> {
+                        val port = call.argument<Int>("port") ?: 8765
+                        val token = call.argument<String>("token") ?: ""
+                        AndroidCallBridgeForegroundService.start(applicationContext, port, token)
+                        result.success(AndroidCallBridgeServer.statusMap())
+                    }
+                    "stopNativeBridge" -> {
+                        AndroidCallBridgeForegroundService.stop(applicationContext)
+                        result.success(AndroidCallBridgeServer.statusMap())
+                    }
+                    "getBridgeRuntimeStatus" -> {
+                        result.success(
+                            AndroidCallBridgeServer.statusMap() + mapOf(
+                                "default_dialer" to AndroidCallController.isDefaultDialer(),
+                                "permissions_granted" to AndroidCallController.hasRequiredPermissions(),
+                                "battery_optimization_ignored" to AndroidCallController.isIgnoringBatteryOptimizations(),
+                            ),
+                        )
+                    }
+                    "requestIgnoreBatteryOptimizations" -> {
+                        AndroidCallController.requestIgnoreBatteryOptimizations(this)
+                        result.success(mapOf("ok" to true))
+                    }
                     "getCallStatus" -> result.success(CallControlState.statusMap())
                     "answerCall" -> result.success(CallControlState.answerCall())
                     "rejectCall" -> result.success(CallControlState.rejectCall())

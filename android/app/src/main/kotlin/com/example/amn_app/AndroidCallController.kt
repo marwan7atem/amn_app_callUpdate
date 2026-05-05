@@ -7,7 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import android.telecom.TelecomManager
+import android.net.Uri
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
@@ -34,7 +37,15 @@ object AndroidCallController {
             applicationContext,
             Manifest.permission.READ_PHONE_STATE,
         ) == PackageManager.PERMISSION_GRANTED
-        return answerGranted && readGranted
+        val notificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+        return answerGranted && readGranted && notificationsGranted
     }
 
     fun requestMissingPermissions(activity: Activity) {
@@ -44,6 +55,10 @@ object AndroidCallController {
         }
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             missing.add(Manifest.permission.READ_PHONE_STATE)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            missing.add(Manifest.permission.POST_NOTIFICATIONS)
         }
         if (missing.isNotEmpty()) {
             ActivityCompat.requestPermissions(activity, missing.toTypedArray(), REQUEST_PERMISSIONS)
@@ -78,5 +93,24 @@ object AndroidCallController {
             intent.putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, activity.packageName)
             activity.startActivityForResult(intent, REQUEST_ROLE)
         }
+    }
+
+    fun isIgnoringBatteryOptimizations(): Boolean {
+        if (!::applicationContext.isInitialized) {
+            return false
+        }
+        val powerManager = applicationContext.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        return powerManager?.isIgnoringBatteryOptimizations(applicationContext.packageName) == true
+    }
+
+    fun requestIgnoreBatteryOptimizations(activity: Activity) {
+        if (isIgnoringBatteryOptimizations()) {
+            return
+        }
+        val intent = Intent(
+            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            Uri.parse("package:${activity.packageName}"),
+        )
+        activity.startActivity(intent)
     }
 }
