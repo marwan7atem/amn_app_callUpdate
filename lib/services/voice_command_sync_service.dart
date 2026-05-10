@@ -9,7 +9,7 @@ class VoiceCommandSyncService {
 
   static final VoiceCommandSyncService instance = VoiceCommandSyncService._();
   static const _baseUrlKey = 'pi_voice_bridge_base_url';
-  static const _defaultBaseUrl = 'http://192.168.1.126:8876';
+  static const _defaultBaseUrl = 'http://192.168.1.8:8876';
 
   Future<String> getBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();

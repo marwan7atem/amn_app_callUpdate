@@ -1,6 +1,6 @@
 {
-  "version": "1.1",
-  "notes": "Filtered voice command catalog for the AMN project. It keeps commands that are practical, relevant to the current product scope, and safe to wire into real actions.",
+  "version": "1.2",
+  "notes": "Active English-only voice catalog for AMN. It includes only commands that are wired to real app screens, Pi pages, Android call actions, or ESP32 hardware actions.",
   "commands": [
     {
       "category": "app_profile",
@@ -14,7 +14,7 @@
       "category": "app_emergency",
       "intent": "open_emergency_contacts",
       "targets": ["app"],
-      "phrases": ["open emergency profile", "show emergency contacts", "add emergency contact", "remove emergency contact", "change my emergency contacts"],
+      "phrases": ["show emergency contacts", "add emergency contact", "remove emergency contact", "change my emergency contacts"],
       "app_action": "open_emergency_contacts",
       "confirmation": "Opening your emergency contacts."
     },
@@ -22,7 +22,7 @@
       "category": "app_emergency",
       "intent": "open_hospital_insurance",
       "targets": ["app"],
-      "phrases": ["show insurance info", "update insurance info", "show nearby hospitals"],
+      "phrases": ["show insurance info", "update insurance info"],
       "app_action": "open_hospital_insurance",
       "confirmation": "Opening hospitals and insurance."
     },
@@ -30,7 +30,7 @@
       "category": "app_connection",
       "intent": "open_pairing",
       "targets": ["app"],
-      "phrases": ["connect to my car", "reconnect to car", "show bluetooth status", "show phone status"],
+      "phrases": ["connect to my car", "reconnect to car"],
       "app_action": "open_pairing",
       "confirmation": "Opening car pairing."
     },
@@ -38,7 +38,7 @@
       "category": "app_status",
       "intent": "open_car_status",
       "targets": ["app"],
-      "phrases": ["show car connection status", "show system status", "show car readiness", "is my car connected"],
+      "phrases": ["show car connection status", "show car readiness", "is my car connected", "is the driver verified", "show current driver", "show active route", "show current music"],
       "app_action": "open_car_status",
       "confirmation": "Opening car status."
     },
@@ -107,6 +107,14 @@
       "confirmation": "Opening emergency."
     },
     {
+      "category": "software_navigation",
+      "intent": "open_voice",
+      "targets": ["software", "app"],
+      "phrases": ["open voice", "open voice assistant", "show voice assistant"],
+      "software_action": "show_voice",
+      "confirmation": "Opening voice assistant."
+    },
+    {
       "category": "system",
       "intent": "go_back",
       "targets": ["software"],
@@ -126,7 +134,7 @@
       "category": "engine",
       "intent": "start_engine",
       "targets": ["software"],
-      "phrases": ["start engine"],
+      "phrases": ["start engine", "turn engine on"],
       "software_action": "start_engine",
       "confirmation": "Starting engine."
     },
@@ -134,9 +142,41 @@
       "category": "engine",
       "intent": "stop_engine",
       "targets": ["software"],
-      "phrases": ["stop engine"],
+      "phrases": ["stop engine", "turn engine off"],
       "software_action": "stop_engine",
       "confirmation": "Stopping engine."
+    },
+    {
+      "category": "hardware",
+      "intent": "read_temperature",
+      "targets": ["software"],
+      "phrases": ["temp", "temperature", "read temperature", "what is the temperature"],
+      "software_action": "read_temperature",
+      "confirmation": "Reading temperature."
+    },
+    {
+      "category": "hardware",
+      "intent": "move_right_mirror",
+      "targets": ["software"],
+      "phrases": ["move right mirror to [angle]", "move the right mirror to [angle]", "set right mirror to [angle]", "set the right mirror to [angle]", "right mirror [angle]", "right mirror to [angle]"],
+      "software_action": "move_right_mirror",
+      "confirmation": "Moving the right mirror."
+    },
+    {
+      "category": "hardware",
+      "intent": "move_left_mirror",
+      "targets": ["software"],
+      "phrases": ["move left mirror to [angle]", "move the left mirror to [angle]", "set left mirror to [angle]", "set the left mirror to [angle]", "left mirror [angle]", "left mirror to [angle]"],
+      "software_action": "move_left_mirror",
+      "confirmation": "Moving the left mirror."
+    },
+    {
+      "category": "hardware",
+      "intent": "move_both_mirrors",
+      "targets": ["software"],
+      "phrases": ["move both mirrors to [angle]", "move the mirrors to [angle]", "set both mirrors to [angle]", "set the mirrors to [angle]", "mirrors [angle]", "mirrors to [angle]", "set mirrors to [angle]"],
+      "software_action": "move_both_mirrors",
+      "confirmation": "Moving both mirrors."
     },
     {
       "category": "face_id",
@@ -145,14 +185,6 @@
       "phrases": ["who am i", "show driver profile"],
       "software_action": "who_am_i",
       "confirmation": "Showing driver profile."
-    },
-    {
-      "category": "face_id",
-      "intent": "driver_registration",
-      "targets": ["software"],
-      "phrases": ["add new driver", "start driver registration", "capture face sample", "save new driver", "remove driver", "show authorized drivers"],
-      "software_action": "driver_registration",
-      "confirmation": "Opening driver registration."
     },
     {
       "category": "camera",
@@ -185,14 +217,6 @@
       "phrases": ["set speaker output", "set microphone input", "prepare music route", "prepare hands free"],
       "software_action": "audio_route_management",
       "confirmation": "Preparing audio routing."
-    },
-    {
-      "category": "calls",
-      "intent": "call_contact",
-      "targets": ["software"],
-      "phrases": ["call mom", "call dad", "call [contact_name]", "redial last number"],
-      "software_action": "call_contact",
-      "confirmation": "Preparing the call."
     },
     {
       "category": "calls",
@@ -230,7 +254,7 @@
       "category": "maps",
       "intent": "route_control",
       "targets": ["software"],
-      "phrases": ["start route", "start navigation", "stop navigation", "cancel route", "use current location", "zoom in", "zoom out", "refresh map"],
+      "phrases": ["start route", "start navigation", "stop navigation", "cancel route", "use current location", "refresh map"],
       "software_action": "route_control",
       "confirmation": "Updating navigation."
     },
@@ -246,7 +270,7 @@
       "category": "emergency",
       "intent": "emergency_calls",
       "targets": ["software"],
-      "phrases": ["call ambulance", "call police", "call fire department", "call emergency contact"],
+      "phrases": ["call emergency contact"],
       "software_action": "emergency_calls",
       "confirmation": "Preparing emergency call."
     },
@@ -254,81 +278,15 @@
       "category": "emergency",
       "intent": "emergency_sharing",
       "targets": ["software"],
-      "phrases": ["send emergency alert", "send my location", "share live location", "show nearby hospitals", "open emergency profile", "update emergency profile"],
+      "phrases": ["show nearby hospitals", "open emergency profile", "update emergency profile"],
       "software_action": "emergency_sharing",
       "confirmation": "Handling emergency command."
-    },
-    {
-      "category": "safety",
-      "intent": "driver_monitoring",
-      "targets": ["software"],
-      "phrases": ["start driver monitoring", "stop driver monitoring", "show safety status", "what did you detect"],
-      "software_action": "driver_monitoring",
-      "confirmation": "Updating driver monitoring."
-    },
-    {
-      "category": "safety",
-      "intent": "safety_toggles",
-      "targets": ["software"],
-      "phrases": ["enable drowsiness detection", "disable drowsiness detection", "enable distraction detection", "disable distraction detection", "enable phone usage detection", "disable phone usage detection", "enable pedestrian detection", "disable pedestrian detection", "enable object detection", "disable object detection"],
-      "software_action": "safety_toggles",
-      "confirmation": "Updating safety detection settings."
-    },
-    {
-      "category": "maintenance",
-      "intent": "maintenance_overview",
-      "targets": ["software", "app"],
-      "phrases": ["open maintenance", "show maintenance reminders", "when is my next maintenance", "show overdue maintenance"],
-      "software_action": "maintenance_overview",
-      "app_action": "maintenance_overview",
-      "confirmation": "Opening maintenance."
-    },
-    {
-      "category": "maintenance",
-      "intent": "maintenance_update",
-      "targets": ["software", "app"],
-      "phrases": ["add maintenance reminder", "delete maintenance reminder", "mark maintenance as done", "add oil change reminder", "add tire check reminder", "add brake check reminder"],
-      "software_action": "maintenance_update",
-      "app_action": "maintenance_update",
-      "confirmation": "Updating maintenance reminders."
-    },
-    {
-      "category": "sync",
-      "intent": "sync_profile",
-      "targets": ["app"],
-      "phrases": ["sync my account", "sync with car", "upload my settings to the car", "download settings from the car", "upload favorites to car", "upload emergency profile to car"],
-      "app_action": "sync_profile",
-      "confirmation": "Syncing your account with the car."
-    },
-    {
-      "category": "emergency",
-      "intent": "mobile_emergency_message",
-      "targets": ["app"],
-      "phrases": ["send emergency message", "send emergency sms", "send emergency whatsapp", "call my emergency contact", "share my live location"],
-      "app_action": "mobile_emergency_message",
-      "confirmation": "Preparing emergency communication."
-    },
-    {
-      "category": "remote_info",
-      "intent": "remote_info",
-      "targets": ["app"],
-      "phrases": ["is the driver verified", "show current driver", "show active route", "show current music"],
-      "app_action": "remote_info",
-      "confirmation": "Opening live car information."
-    },
-    {
-      "category": "notifications",
-      "intent": "alerts_overview",
-      "targets": ["app"],
-      "phrases": ["show alerts", "show safety alerts", "show emergency alerts", "clear notifications"],
-      "app_action": "alerts_overview",
-      "confirmation": "Opening alerts."
     },
     {
       "category": "system",
       "intent": "voice_status",
       "targets": ["software", "app"],
-      "phrases": ["voice status", "assistant status", "are you ready", "system status"],
+      "phrases": ["voice status", "assistant status", "are you ready"],
       "software_action": "voice_status",
       "confirmation": "Voice command system is ready."
     },
@@ -338,7 +296,7 @@
       "targets": ["software", "app"],
       "phrases": ["help", "what can you do", "voice help", "show commands"],
       "software_action": "voice_help",
-      "confirmation": "I can help with car pages, calls, maps, Bluetooth, emergency, and maintenance."
+      "confirmation": "I can help with car pages, camera, maps, Bluetooth, calls, emergency, and hardware control."
     }
   ]
 }

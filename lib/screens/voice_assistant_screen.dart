@@ -118,9 +118,10 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
 
   String _patternFromPhrase(String phrase) {
     final placeholder = RegExp(r'\\[(\\w+)\\]');
-    final normalized = _normalize(phrase.replaceAll(placeholder, '__slot__'));
+    const slotMarker = 'slotmarker';
+    final normalized = _normalize(phrase.replaceAll(placeholder, slotMarker));
     return RegExp.escape(normalized)
-        .replaceAll('__slot__', '(.+)')
+        .replaceAll(slotMarker, '(.+)')
         .replaceAll(r'\\ ', r'\\s+');
   }
 
@@ -216,23 +217,20 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
     }
 
     final match = _findCatalogMatch(text);
-    if (match == null) {
-      await _setAssistantReply(
-        'That command is not in the AMN command list yet.',
-        speak: true,
-      );
-      return;
-    }
+    final targets = match == null
+        ? const <String>[]
+        : ((match['targets'] as List?) ?? const [])
+            .map((e) => e.toString())
+            .toList();
 
-    final targets = ((match['targets'] as List?) ?? const [])
-        .map((e) => e.toString())
-        .toList();
-
-    if (targets.contains('software')) {
+    final shouldSendToCar = match == null || targets.contains('software');
+    if (shouldSendToCar) {
       await _refreshBridgeStatus();
       if (!_bridgeConnected) {
         await _setAssistantReply(
-          'The car software is not reachable right now. Check the Pi voice bridge connection first.',
+          match == null
+              ? 'I could not match that locally, and the car software is not reachable right now.'
+              : 'The car software is not reachable right now. Check the Pi voice bridge connection first.',
           speak: true,
         );
         return;
@@ -250,6 +248,14 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen> {
       );
       await _setAssistantReply(reply, speak: true);
       await _refreshBridgeStatus();
+      return;
+    }
+
+    if (match == null) {
+      await _setAssistantReply(
+        'That command is not available right now.',
+        speak: true,
+      );
       return;
     }
 
